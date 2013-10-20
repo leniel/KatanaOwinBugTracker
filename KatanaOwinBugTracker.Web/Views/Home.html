@@ -1,0 +1,125 @@
+﻿
+<!DOCTYPE html>
+<html>
+<head>
+    <title>@Model.title</title>
+
+    <script src="Scripts/jquery-2.0.3.min.js" type="text/javascript"></script>
+    <script src="Scripts/knockout-2.3.0.js" type="text/javascript"></script>
+
+    <script type="text/javascript">
+
+        $(function()
+        {
+            var viewModel;
+
+            $.getJSON('/api/bugs', function(bugs)
+            {
+                var model = bugs;
+
+                viewModel = {
+
+                    backlog: ko.observableArray(
+                      bugs.filter(function(bug) { return bug.State === 'backlog'; })),
+
+                    working: ko.observableArray(
+                      bugs.filter(function(bug) { return bug.State === 'working'; })),
+
+                    done: ko.observableArray(
+                      bugs.filter(function(bug) { return bug.State === 'done'; })),
+
+                    changeState: function(bug, newState)
+                    {
+                        var self = this;
+
+                        $.post('/api/bugs/' + newState, { '': bug.Id }, function(data)
+                        {
+                            self.moveBug(data);
+                        });
+                    },
+
+                    moveBug: function(bug)
+                    {
+                        //remove the item from one of the existing lists
+                        [this.backlog, this.working, this.done].forEach(function(list)
+                        {
+                            list().forEach(function(item)
+                            {
+                                if(item.Id == bug.Id)
+                                {
+                                    console.log('removing item ' + item.Id);
+
+                                    list.remove(item);
+                                }
+                            });
+                        });
+
+                        // add bug to correct list
+                        this[bug.State].push(bug);
+                    }
+                };
+
+                ko.applyBindings(viewModel);
+            })
+        });
+
+    </script>
+
+</head>
+
+<body>
+    <header>
+        <h1>@Model.title</h1>
+    </header>
+
+    <section>
+
+        <h2>Backlog</h2>
+
+        <ul class="bugs" id="backlog" data-bind="foreach:backlog">
+            <li>
+                [<span data-bind="text: Id"></span>] <span data-bind="text: Title"></span>: <span data-bind="text: Description"></span>
+                <ul>
+                    <li><a href="#" data-bind="click: $root.changeState.bind($root, $data, 'working')">Move to working</a></li>
+                    <li><a href="#" data-bind="click: $root.changeState.bind($root, $data, 'done')">Move to done</a></li>
+                </ul>
+            </li>
+        </ul>
+
+    </section>
+
+    <section>
+
+        <h2>Working</h2>
+
+        <ul class="bugs" id="working" data-bind="foreach:working">
+            <li>
+                [<span data-bind="text: Id"></span>] <span data-bind="text: Title"></span>: <span data-bind="text: Description"></span>
+                <ul>
+                    <li><a href="#" data-bind="click: $root.changeState.bind($root, $data, 'backlog')">Move to backlog</a></li>
+                    <li><a href="#" data-bind="click: $root.changeState.bind($root, $data, 'done')">Move to done</a></li>
+                </ul>
+            </li>
+        </ul>
+
+    </section>
+
+    <section>
+
+        <h2>Done</h2>
+
+        <ul class="bugs" id="done" data-bind="foreach:done">
+            <li>
+                [<span data-bind="text: Id"></span>] <span data-bind="text: Title"></span>: <span data-bind="text: Description"></span>
+                <ul>
+                    <li><a href="#" data-bind="click: $root.changeState.bind($root, $data, 'backlog')">Move to backlog</a></li>
+                    <li><a href="#" data-bind="click: $root.changeState.bind($root, $data, 'working')">Move to working</a></li>
+                </ul>
+            </li>
+        </ul>
+
+    </section>
+
+</body>
+
+</html>
