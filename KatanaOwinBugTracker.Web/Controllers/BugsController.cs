@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Web.Http;
 using System.Linq;
+using Microsoft.AspNet.SignalR;
+using KatanaOwinBugTracker.Web.Hubs;
 
 namespace KatanaOwinBugTracker.Web.Controllers
 {
@@ -9,6 +11,13 @@ namespace KatanaOwinBugTracker.Web.Controllers
     public class BugsController : ApiController
     {
         IBugsRepository bugsRepository = new BugsRepository();
+
+        private IHubContext hub;
+
+        public BugsController()
+        {
+            hub = GlobalHost.ConnectionManager.GetHubContext<BugsHub>();
+        }
 
         [Route("")]
         public IEnumerable<Bug> Get()
@@ -21,6 +30,8 @@ namespace KatanaOwinBugTracker.Web.Controllers
         {
             var bug = bugsRepository.GetBugs().First(b => b.Id == id);
             bug.State = "backlog";
+
+            hub.Clients.All.moved(bug);
             
             return bug;
         }
@@ -30,7 +41,9 @@ namespace KatanaOwinBugTracker.Web.Controllers
         {
             var bug = bugsRepository.GetBugs().First(b => b.Id == id);
             bug.State = "working";
-           
+
+            hub.Clients.All.moved(bug);
+
             return bug;
         }
 
@@ -39,7 +52,9 @@ namespace KatanaOwinBugTracker.Web.Controllers
         {
             var bug = bugsRepository.GetBugs().First(b => b.Id == id);
             bug.State = "done";
-            
+
+            hub.Clients.All.moved(bug);
+
             return bug;
         }
     }

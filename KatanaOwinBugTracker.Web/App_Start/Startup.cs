@@ -8,6 +8,9 @@ namespace KatanaOwinBugTracker.Web.App_Start
     {
         public void Configuration(IAppBuilder app)
         {
+            // SignalR
+            app.MapSignalR();
+
             // ASP.NET Web API
             var config = new HttpConfiguration();       
             config.MapHttpAttributeRoutes();
