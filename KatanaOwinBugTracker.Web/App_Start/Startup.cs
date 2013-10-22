@@ -1,4 +1,5 @@
-﻿using Nancy.Conventions;
+﻿using Nancy;
+using Nancy.Conventions;
 using Owin;
 using System.Web.Http;
 
@@ -21,8 +22,21 @@ namespace KatanaOwinBugTracker.Web.App_Start
             app.UseWebApi(config);
 
             // Nancy
-            StaticContentConventionBuilder.AddDirectory("Scripts", @"Scripts");
-            app.UseNancy();
+            app.UseNancy(options =>
+            {
+                options.Bootstrapper = new NancyBootstrapper();
+            });
+        }
+    }
+
+    public class NancyBootstrapper : DefaultNancyBootstrapper
+    {
+        protected override void ConfigureConventions(NancyConventions nancyConventions)
+        {
+            base.ConfigureConventions(nancyConventions);
+
+            Conventions.StaticContentsConventions.Add(
+                StaticContentConventionBuilder.AddDirectory("Scripts", "Scripts"));
         }
     }
 }
